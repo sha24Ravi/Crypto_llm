@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  zookeeper:
+    image: zookeeper:3.9.1  # modern version
+    ports:
+      - "2181:2181"
+
+  kafka:
+   image: apache/kafka:latest
+   container_name: broker
+   ports:
+    - "9092:9092"
+    - "9093:9093"
+   environment:
+    KAFKA_NODE_ID: 1
+    KAFKA_PROCESS_ROLES: broker,controller
+    KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093
+    KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
+    KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+    KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+    KAFKA_CONTROLLER_QUORUM_VOTERS: 1@broker:9093
+    KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+    KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+    KAFKA_NUM_PARTITIONS: 3
+   depends_on:
+    - zookeeper
+  redis:
+    image: redis:7.0
+    ports:
+      - "6379:6379"
+
+  producer:
+    image: crypto-producer
+    depends_on:
+      - kafka
+
+  consumer:
+    image: crypto-consumer
+    depends_on:
+      - kafka
+      - redis
+
+  streamz:
+    image: crypto-streamz
+    depends_on:
+      - kafka
+      - redis
+
+  streamlit:
+    image: crypto-streamlit_app
+    ports:
+      - "8501:8501"
+    depends_on:
+      - redis

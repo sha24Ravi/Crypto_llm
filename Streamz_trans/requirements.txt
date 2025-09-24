@@ -1,0 +1,8 @@
+kafka-python
+streamz
+redis
+pandas
+streamlit
+openai
+websocket-client 
+confluent-kafka
